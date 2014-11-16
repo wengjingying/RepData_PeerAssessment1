@@ -1,25 +1,163 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research Peer Assignment
+
+<br>
+
+## 1. Loading and preprocessing the data
+
+<br>
+
+```{r echo=TRUE}
+activity <- read.csv("C:/Users/Administrator/Desktop/coursera/activity.csv",sep = ",",stringsAsFactors = FALSE)
+```
+
+<br>
+
+## 2. The mean total number of steps taken per day
+
+<br>
+
+```{r echo=TRUE}
+acdate<- seq(from=as.Date("2012-10-01"),by =1,to =as.Date("2012-11-30"))
+sumdate <-data.frame()
+for(a in as.character(acdate)){sumdate <- rbind(sumdate,sum(activity[activity$date == a,1],na.rm = TRUE))}
+perday<- cbind(acdate,sumdate)
+colnames(perday) <- c("date","totalsteps")
+```
+
+<br>
+
+```{r echo=TRUE,fig.height=4}
+hist(perday$totalsteps,xlab = "perday steps")
+```
+
+<br>
+
+```{r echo=TRUE}
+stepmean <- mean(perday$totalsteps)
+stepmedian <- median(perday$totalsteps)
+```
+
+<br>
+
+The mean of total number of steps taken per day is **`r stepmean`**
+
+<br>
+
+The median of total number of steps taken per day is **`r stepmedian`**
+
+<br>
+
+<br>
+
+## 3. The average daily activity pattern
+
+<br>
+
+```{r echo=TRUE}
+inter <- unique(activity$interval)
+interave <- data.frame()
+for(i in inter){interave <-rbind(interave,mean(activity[activity$interval == i,1],na.rm = TRUE))}
+interave <- cbind(inter,interave)
+colnames(interave) <- c("interval","ave")
+```
+
+<br>
+
+```{r echo = TRUE,fig.height=4}
+interpolt<-plot(x=interave$interval,y=interave$ave,type="l")
+whichinter<-subset(interave,ave==max(interave$ave))[,1]
+```
+
+<br>
+
+The **`r whichinter`** on average across all the days in the dataset, contains the maximum number of steps
+
+<br>
+
+## 4.Imputing missing values
+
+<br>
+
+```{r echo=TRUE}
+totalNA <- sum(is.na(activity$steps))
+```
+
+<br>
+
+The total number of missing values in the dataset is **`r totalNA`**
+
+<br>
+
+The strategy for filling in all of the missing values in the dataset is *using the mean for steps taken across all days in 5-minute interval*.
+
+<br>
 
 
-## Loading and preprocessing the data
+```{r echo=TRUE}
+activity_n <-activity
+for(i in 1:17568){
+        if(is.na(activity_n[i,1])){
+                if(i%%288==0){activity_n[i,1]=interave[288,2]}
+                else{
+                activity_n[i,1]=interave[i%%288,2]
+                }
+        }
+}
+```
+
+<br>
+
+```{r echo=TRUE}
+sumdate_n <-data.frame()
+for(a in as.character(acdate)){sumdate_n <- rbind(sumdate_n,sum(activity_n[activity_n$date == a,1],na.rm = TRUE))}
+perday_n<- cbind(acdate,sumdate_n)
+colnames(perday_n) <- c("date","totalsteps")
+stepmean_n <- mean(perday_n$totalsteps)
+stepmedian_n <- median(perday_n$totalsteps)
+hist(perday_n$totalsteps)
+answermean <-(stepmean == stepmean_n)
+answermedian <- (stepmedian == stepmedian_n)
+```
+
+<br>
+
+Does the *mean* total number of steps taken per day differ from the estimate from the first part of the assignment: **`r answermean`**
+
+<br>
+
+Does the *median* total number of steps taken per day differ from the estimate from the first part of the assignment: **`r answermedian`**
+
+
+<br>
+
+## 5. The differences in activity patterns between weekdays and weekends
+
+<br>
+
+```{r echo=TRUE}
+library(chron)
+library(dplyr)
+activity_w <- cbind(activity,1:17568)
+for(i in 1:17568){
+        
+        if(is.weekend(as.Date(activity[i,2]))){
+                activity_w[i,4] <-"weekend"
+        }
+        else{
+                activity_w[i,4] <-"weekdays"
+        }
+}
+colnames(activity_w) <- c("steps","date","interval","week")
+```
+
+<br>
+
+```{r echo=TRUE,fig.height=4}
+library(lattice)
+xyplot(steps~interval | week,data = activity_w,layout= c(1,2),type="l",xlab = "Number of steps")
+```
+
+<br>
 
 
 
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
